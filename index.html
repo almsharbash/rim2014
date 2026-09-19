@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>كلمات</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #38bdf8;
+      --border-color: #334155;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      width: 100%;
+      max-width: 600px;
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+    main {
+      width: 100%;
+      max-width: 600px;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+    .post-box {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 6px;
+      padding: 0.5rem;
+      resize: none;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 0.5rem;
+      background-color: var(--accent-color);
+      color: #000;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      float: left;
+    }
+    .feed {
+      margin-top: 1rem;
+    }
+    .post-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .post-time {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>كلمات</header>
+
+  <main>
+    <div class="post-box">
+      <textarea id="postInput" placeholder="ماذا يدور في ذهنك؟"></textarea>
+      <button onclick="addPost()">نشر</button>
+      <div style="clear:both;"></div>
+    </div>
+
+    <div class="feed" id="feed">
+      <!-- المنشورات ستظهر هنا -->
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      databaseURL: "https://kalimat-4e432-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const postsRef = ref(db, 'posts');
+
+    window.addPost = function() {
+      const input = document.getElementById('postInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      push(postsRef, {
+        content: text,
+        timestamp: Date.now()
+      }).then(() => {
+        input.value = '';
+      });
+    };
+
+    onValue(postsRef, (snapshot) => {
+      const feed = document.getElementById('feed');
+      feed.innerHTML = '';
+      const data = snapshot.val();
+      if (data) {
+        Object.values(data).reverse().forEach(post => {
+          const card = document.createElement('div');
+          card.className = 'post-card';
+          const date = new Date(post.timestamp).toLocaleString('ar-EG');
+          card.innerHTML = `<div class="post-time">${date}</div><div>${post.content}</div>`;
+          feed.appendChild(card);
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>
